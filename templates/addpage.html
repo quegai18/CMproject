@@ -1,0 +1,26 @@
+{% extends "index.html" %}
+{% block content %}
+    <h3>所有的输入框都不可以为空</h3>
+    <div>
+
+        <form class="form-horizontal" method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+
+                    <label class="col-sm-2 control-label">{{ field.label }}</label>
+                    <div class="col-sm-8 ">
+                        {{ field }}
+                        <span style="color:firebrick;">{{ field.errors.0 }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="form-group">
+                <div class="col-sm-offset-2  col-sm-8">
+                    <button type="submit" class="btn btn-primary">提 交</button>
+                    <a href="/index/"><button type="button" class="btn btn-primary">返 回</button></a>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

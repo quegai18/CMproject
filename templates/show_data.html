@@ -1,0 +1,93 @@
+{% extends "index.html" %}
+{% block content %}
+    {% csrf_token %}
+    <div>
+        <a href="/commodity/addcomm/"><button type="button" class="btn btn-primary" style="float: left">新增商品</button></a>
+        <a href="/commodity/download/"><button type="button" class="btn btn-info" style="float: left">批量导入模板下载</button></a>
+        <form action="" method="post" style="float: left">
+            <input type="file" id="bulkload" name="bulkload" style="display: none">
+            <label type="button" class="btn btn-info" id="addBtn" for="bulkload">Excel批量新增商品</label>
+        </form>
+        <div class="col-lg-5 pull-right">
+            <form action="/commodity/search/" method="post">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" name="search_text" class="form-control" placeholder="输入商品条码或商品名称进行搜索">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="submit">搜索商品</button>
+                    </span>
+                </div><!-- /input-group -->
+            </form>
+        </div>
+    </div>
+    <div>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>商品ID</th>
+                <th>商品名称</th>
+                <th>当前库存量</th>
+                <th>当前销售量</th>
+                <th>商品条码</th>
+                <th>增加库存/减少库存/删除商品</th>
+            </tr>
+            </thead>
+            {% block data %}
+            {% endblock %}
+        </table>
+        <a href="/index/"><button type="button" class="btn btn-primary">返回首页</button></a>
+    </div>
+    <script></script>
+    <script type="text/javascript">
+       //用于点击新增、删减按钮
+        $('.cm-actions').click(function (event) {
+            $("#tips").remove();
+            var ajax_url = $(this).attr("actions");         //获取到标签中留置的URL，用于进入对应路径
+            var text = $(this).attr("text");           //获取留置的操作解释，是新增还是减少库存
+            var action = '<div id="tips" class=\"input-group\" actions=\"'+ajax_url+'"\ style=\"width: 200px;\"><span class=\"input-group-addon\">'+text+'</span><input type=\"text\" class=\"form-control\" aria-label=\"\"><span class=\"input-group-addon btn\" id=\"submission\">提交</span></div>\n';
+            $(this).parents("td").append(action);  //把输入框显示到页面
+        });
+        //发起一个ajax请求，对商品进行增减
+        $(".cm_flag").on('click','#tips .btn',function(){
+            var input_box = $(this).siblings("input");    //这里为了操作过后对输入框进行处理，留一个在这里
+            $.ajax({
+	            url: $(this).parent().attr("actions"),   //获取进行ajax的url
+	            type: 'post',
+                async : false,
+	            data: {
+	                csrfmiddlewaretoken:$("[name='csrfmiddlewaretoken']").val(),
+	                number: input_box.val(),   //获取用户输入的数量
+	            },
+	            success:function (data) {
+                    var recv_data = JSON.parse(data);          //接收后端传来的返回值，看是否成功录入
+                    if (recv_data.tip){               //如果有提示语，说明用户输入不合法，直接把提示语展示给用户看
+                        alert(recv_data.tip);
+                        input_box.val("");
+                    }else{
+                        window.location.reload();//刷新当前页面
+                    }
+	            },
+	        });
+        });
+        //上传批量添加商品的按钮
+        $("#bulkload").change(function (event) {
+            var formData =  new FormData();
+            var inputFile= $(this)[0].files[0];
+            var inputFileName = $(this)[0].files[0].name;
+            formData.append("csrfmiddlewaretoken", $("[name='csrfmiddlewaretoken']").val());
+            formData.append("inputFile", inputFile);
+            formData.append("inputFileName", inputFileName);
+            $.ajax({
+                url:"/commodity/bulkload/",
+                type: "post",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    alert(data);
+                    window.location.reload();//刷新当前页面
+                }
+            });
+        });
+    </script>
+{% endblock %}

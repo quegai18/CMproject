@@ -1,0 +1,16 @@
+{% extends "index.html" %}
+{% block content %}
+    <div>
+        <div class="alert alert-danger" role="alert">
+            <form method="post">
+                {% csrf_token %}
+                <p style="font-size: 13px;">
+                    <p>{{ tip }}</p>
+                </p>
+                <div style="margin-top: 20px">
+                    <a href="{% url 'index' %}" class="btn btn-default btn-sm">返回首页</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

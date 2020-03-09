@@ -1,0 +1,55 @@
+{% extends "show_data.html" %}
+{% block data %}
+    <tbody>
+        {% for zero_stock_item in zero_stock_commodity %}
+        <tr>
+            <th scope="row">{{ zero_stock_item.id }}</th>
+            <td>{{ zero_stock_item.title }}</td>
+            <td>{{ zero_stock_item.stock }}</td>
+            <td>{{ zero_stock_item.sell }}</td>
+            <td>{{ zero_stock_item.barcode }}</td>
+            <td class="cm_flag">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default cm-actions" aria-label="Left Align" actions="/commodity/addstock/{{ zero_stock_item.id }}" text="增加">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true">
+                        </span>
+                    </button>
+                    <button type="button" class="btn btn-default" aria-label="Left Align" style="text-decoration:none">
+                        <a href="/commodity/remove/{{ zero_stock_item.id }}">
+                            <span class="glyphicon glyphicon-remove" aria-hidden="true">
+                            </span>
+                        </a>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+        {% for stock_item in stock_commodity %}
+        <tr>
+            <th scope="row">{{ stock_item.id }}</th>
+            <td>{{ stock_item.title }}</td>
+            <td>{{ stock_item.stock }}</td>
+            <td>{{ stock_item.sell }}</td>
+            <td>{{ stock_item.barcode }}</td>
+            <td class="cm_flag">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default cm-actions" aria-label="Left Align" actions="/commodity/addstock/{{ stock_item.id }}" text="增加">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true">
+                        </span>
+                    </button>
+                    <button type="button" class="btn btn-default cm-actions" aria-label="Left Align" actions="/commodity/reducestock/{{ stock_item.id }}" text="减少">
+                        <span class="glyphicon glyphicon-minus" aria-hidden="true">
+                        </span>
+                    </button>
+                    <button type="button" class="btn btn-default" aria-label="Left Align" style="text-decoration:none">
+                        <a href="/commodity/remove/{{ stock_item.id }}">
+                            <span class="glyphicon glyphicon-remove" aria-hidden="true">
+                            </span>
+                        </a>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+{% endblock %}
