@@ -121,6 +121,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # -------------------------------------------------------------------------------------------------
+# STATIC_ROOT = '/usr/local/cmpro_static/'            # 这是在部署项目到linux时候用的
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
