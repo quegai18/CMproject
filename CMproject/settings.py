@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cmpro.middleware.cmpro.CmproMiddleware',
 ]
 
 ROOT_URLCONF = 'CMproject.urls'
@@ -125,14 +126,33 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
-
+# -------------------------------------------------------------------------------------------------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',   # 这里是固定的
-        'NAME': 'cmpro',           # 将要连接的数据库名
+        'NAME': 'cmprotest',           # 将要连接的数据库名
         'USER': 'root',        # 数据库用户名
         'PASSWORD': 'quegai18',   #数据库密码
         'HOST': '58.223.171.162',    # 连接的地址(默认本机)
         'PORT': 5999          # 端口号
     }
 }
+
+LOGIN_URL = '/login/'
+# URL白名单
+WHITE_LIST = [
+    "/login/",
+]
+
+DB_DUMP_INTERVAL = 604800     # 间隔时间，目前设定是一周
+
+
+# -------------------------------------------------------------------------------------------------
+# 这是发邮件用到的
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "smtp.qq.com"  # 这是邮箱代理地址
+EMAIL_PORT = 25  # 这是邮箱端口号
+EMAIL_HOST_USER = "2712060002@qq.com"  # 这是邮箱账号
+EMAIL_HOST_PASSWORD = "orpvsvddzdykdgdh"  # 这是邮箱授权码
+# -------------------------------------------------------------------------------------------------
+

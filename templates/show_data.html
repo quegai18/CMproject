@@ -3,10 +3,10 @@
     {% csrf_token %}
     <div>
         <a href="/commodity/addcomm/"><button type="button" class="btn btn-primary" style="float: left">新增商品</button></a>
-        <a href="/commodity/download/"><button type="button" class="btn btn-info" style="float: left">批量导入模板下载</button></a>
+        <a href="/commodity/download/"><button type="button" class="btn btn-success" style="float: left">批量导入模板下载</button></a>
         <form action="" method="post" style="float: left">
             <input type="file" id="bulkload" name="bulkload" style="display: none">
-            <label type="button" class="btn btn-info" id="addBtn" for="bulkload">Excel批量新增商品</label>
+            <label type="button" class="btn btn-warning" id="addBtn" for="bulkload">Excel批量新增商品</label>
         </form>
         <div class="col-lg-5 pull-right">
             <form action="/commodity/search/" method="post">
@@ -22,20 +22,21 @@
     </div>
     <div>
         <table class="table">
-            <thead>
+            <thead class="text-center">
             <tr>
-                <th>商品ID</th>
-                <th>商品名称</th>
-                <th>当前库存量</th>
-                <th>当前销售量</th>
-                <th>商品条码</th>
-                <th>增加库存/减少库存/删除商品</th>
+                <th class="text-center">商品ID</th>
+                <th class="text-center">商品名称</th>
+                <th class="text-center">当前库存量</th>
+                <th class="text-center">当前销售量</th>
+                <th class="text-center">商品条码</th>
+                <th class="text-center">增加库存/减少库存/删除商品</th>
             </tr>
             </thead>
             {% block data %}
             {% endblock %}
         </table>
         <a href="/index/"><button type="button" class="btn btn-primary">返回首页</button></a>
+        <a href="/logout/"><button type="button" class="btn btn-danger">退出</button></a>
     </div>
     <script></script>
     <script type="text/javascript">

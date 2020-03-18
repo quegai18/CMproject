@@ -21,7 +21,10 @@ from cmpro import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path('^$', views.page_show),
+    re_path('^$', views.page_show),                            # 首页面
     path('index/', views.page_show, name="index"),
     path('commodity/', include("cmpro.urls")),
+    path('login/', views.login, name='login'),                               # 登录页面
+    path('logout/', views.logout),                               # 登录页面
+
 ]

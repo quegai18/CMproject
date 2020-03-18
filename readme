@@ -1,0 +1,280 @@
+项目上线手册
+
+1 前言和准备
+	焚香沐浴，杀鸡滴血，拜一拜服务器
+2 服务器
+	服务器系统 linux centos 7.2系统
+	参考：https://www.cnblogs.com/asheng2016/p/install-centos75.html
+	使用UltraIOS刻录软件把系统包刻录到U盘
+	快捷键启动U盘
+	按【Tab】键，在光标处输入net.ifnames=0，然后按回车
+	时间选择【上海时间】
+	语言支持需要选择英语+中文
+	安装方式选择minimal，然后对应的选择默认工具
+	磁盘选择默认
+	KDUMP关闭
+	SECURITY POLICY关闭
+	设置主机名，网卡信息（固定IP选择Manual），启用网卡配置
+	设置root密码
+	安装结束后，开机，
+	【systemctl status firewalld.service】   查看防火墙状态
+	【systemctl stop firewalld.service】     关闭防火墙
+	【systemctl disable firewalld.service】  禁止防火墙开机启动
+	【vim /etc/locale.conf】                 设置字符编码，输入以下内容
+		【LANG="zh_CN.UTF-8" SYSFONT="latarcyrheb-sun16" SUPPORTED="zh_CN.UTF-8:zh_CN:zh"】
+3 安装必备软件包
+	对应版本的软件我都已经打包压缩放在网盘里，直接去网盘下载即可，默认安装包都存于【/usr/src/】
+	- 安装nginx
+		[root@liuwei src]# tar xf nginx-1.17.1.tar.gz
+		[root@liuwei src]# cd nginx-1.17.1
+		[root@liuwei nginx-1.17.1]# yum -y install gcc pcre-devel zlib-devel
+		[root@liuwei nginx-1.17.1]# ./configure --prefix=/usr/local/nginx
+		[root@liuwei nginx-1.17.1]# make -j2 && make install
+		[root@liuwei nginx-1.17.1]# ln -s /usr/local/nginx/sbin/nginx /usr/sbin/
+		[root@liuwei ~]# yum -y install net-tools
+		[root@liuwei ~]# netstat -ntpl
+		[root@liuwei ~]# vim /usr/local/nginx/conf/nginx.conf
+						【修改第一行的nobody变成root】
+		[root@liuwei ~]# nginx      【启动】
+		[root@liuwei ~]# netstat -ntpl      【查看是否启动】
+	- 安装mysql
+		升级cmake工具
+			[root@liuwei src]# tar xf cmake-3.6.0.tar.gz
+			[root@liuwei src]# cd cmake-3.6.0
+			[root@liuwei cmake-3.6.0]# ./configure
+			[root@liuwei cmake-3.6.0]# make -j2 && make install
+			[root@liuwei cmake-3.6.0]# cd
+			[root@liuwei mysql-5.7.27]# rm -rf CMakeCache.txt
+			[root@liuwei mysql-5.7.27]#  yum install bison
+			[root@liuwei ~]# cmake --version       【检查版本，确认是否安装】
+		升级boots库文件
+			[root@liuwei src]# tar xf boost_1_59_0.tar.bz2
+			[root@liuwei src]# mv boost_1_59_0 /usr/local/boost
+		安装mysql
+			[root@liuwei src]# tar xf mysql-5.7.27.tar.gz
+			[root@liuwei src]# cd mysql-5.7.27/
+			[root@liuwei mysql-5.7.27]# cmake . -DCMAKE_INSTALL_PREFIX=/usr/local/mysql \
+				> -DMYSQL_DATADIR=/usr/local/mysql/data/ \
+				> -DMYSQL_UNIX_ADDR=/usr/local/mysql/mysql.sock \
+				> -DWITH_INNOBASE_STORAGE_ENGINE=1 \
+				> -DWITH_MYISAM_STORAGE_ENGINE=1 \
+				> -DENABLED_LOCAL_INFILE=1 \
+				> -DEXTRA_CHARSETS=all \
+				> -DDEFAULT_CHARSET=utf8 \
+				> -DDEFAULT_COLLATION=utf8_general_ci \
+				> -DWITH_DEBUG=0 \
+				> -DWITH_EMBEDDED_SERVER=1 \
+				> -DDOWNLOAD_BOOST=1 \
+				> -DENABLE_DOWNLOADS=1 \
+				> -DWITH_BOOST=/usr/local/boost \
+				> -DMYSQL_TCP_PORT=3306
+			[root@liuwei mysql-5.7.27]# make -j2 && make install
+			[root@liuwei mysql-5.7.27]# cp /usr/local/mysql/support-files/mysql.server /etc/init.d/mysql
+			[root@liuwei mysql-5.7.27]# chmod 755 /etc/init.d/mysql
+			[root@liuwei ~]# useradd -s /sbin/nologin -r mysql
+			[root@liuwei ~]# chown mysql.mysql /usr/local/mysql/ -R
+			[root@liuwei ~]# ln -sf /usr/local/mysql/bin/* /usr/bin/
+			[root@liuwei ~]# ln -sf /usr/local/mysql/lib/* /usr/lib/
+			[root@liuwei ~]# ln -sf /usr/local/mysql/libexec/* /usr/local/libexec
+			[root@liuwei ~]# ln -sf /usr/local/mysql/man/man1/* /usr/share/man/man1
+			[root@liuwei ~]# ln -sf /usr/local/mysql/man/man8/* /usr/share/man/man8
+			[root@liuwei ~]# vim /etc/my.cnf
+				[mysqld]
+				basedir=/usr/local/mysql
+				datadir=/usr/local/mysql/data
+				socket=/usr/local/mysql/mysql.sock
+				# Disabling symbolic-links is recommended to prevent assorted security risks
+				symbolic-links=0
+				# Settings user and group are ignored when systemd is used.
+				# If you need to run mysqld under a different user or group,
+				# customize your systemd unit file for mariadb according to the
+				# instructions in http://fedoraproject.org/wiki/Systemd
+				[mysqld_safe]
+				log-error=/var/log/mysql.log
+				pid-file=/var/run/mysql.pid
+				#
+				# include all files from the config directory
+				#
+				!includedir /etc/my.cnf.d
+			[root@liuwei mysql]# rm -rf /usr/local/mysql/data/
+			[root@liuwei ~]# /usr/local/mysql/bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql/ --datadir=/usr/local/mysql/data/
+			记录初始密码：R1s8qntr;9rs
+			[root@liuwei ~]# /etc/init.d/mysql start
+			[root@liuwei ~]#  /usr/local/mysql/bin/mysql_secure_installation   【修改登录密码】
+			[root@liuwei ~]# mysql -uroot -pquegai18    【登录MYSQL，修改远程权限】
+				GRANT ALL PRIVILEGES ON *.* TO root@"%" IDENTIFIED BY "quegai18";
+				flush privileges;
+				如果提示密码不符合要求可以：
+				vim /etc/my.conf
+				在[mysqld] 中增加如下的配置:validate_password=OFF
+	- 安装python
+		[root@liuwei src]# tar xf Python-3.7.1.tar.xz
+		[root@liuwei Python-3.7.1]# yum -y install gcc-* openssl-* libffi-devel sqlite-devel
+		[root@liuwei Python-3.7.1]# ./configure --enable-optimizations --with-openssl=/usr/bin/openssl
+		[root@liuwei Python-3.7.1]# vim Modules/Setup    【解除一部分代码的注释】
+			需要解除注释的代码：
+				SSL=/usr/local/ssl
+				_ssl _ssl.c \
+				        -DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+				        -L$(SSL)/lib -lssl -lcrypto
+		[root@liuwei Python-3.7.1]# make -j2 && make install
+		[root@liuwei Python-3.7.1]# pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --upgrade pip
+		[root@liuwei Python-3.7.1]# pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple django==2.1.8
+		[root@liuwei Python-3.7.1]# pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple virtualenv
+		[root@liuwei Python-3.7.1]# pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple pymysql
+		[root@liuwei Python-3.7.1]#	pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple uwsgi
+		[root@liuwei Python-3.7.1]#	pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple xlrd
+	- 安装nginx
+	- 安装uWSGI
+		[root@liuwei ~]# mkdir /etc/uwsgi
+		[root@liuwei ~]# vim /etc/uwsgi/uwsgi.ini
+			[uwsgi]
+			uid=root
+			gid=root
+			socket=127.0.0.1:9090
+			master=true
+			vhost=true
+			no-site=true
+			workers=2
+			reload-mercy=10
+			vacuum=true
+			max-requests=1000
+			limit-as=512
+			buffer-size=30000
+			pidfile=/var/run/uwsgi9090.pid
+			daemonize =/var/log/uwsgi9090.log
+			pythonpath=/usr/local/nginx/html/CMproject/venv/Lib/site-packages/
+		[root@liuwei ~]# vim /etc/init.d/uwsgi
+			#!/usr/bin/sh
+			DESC="uwsgi daemon"
+			NAME=uwsgi
+			DAEMON=/usr/local/bin/uwsgi
+			CONFIGFILE=/etc/uwsgi/$NAME.ini
+			PIDFILE=/var/run/${NAME}9090.pid
+			SCRIPTNAME=/etc/init.d/$NAME
+			FIFOFILE=/tmp/uwsgififo
+			set -e
+			[ -x "$DAEMON" ] || exit 0
+
+			do_start() {
+			if [ ! -f $PIDFILE ];then
+			   $DAEMON $CONFIGFILE || echo -n "uwsgi  running"
+			else
+			   echo "The PID is exist..."
+			fi
+			}
+
+			do_stop() {
+			if [ -f $PIDFILE ];then
+			   $DAEMON --stop $PIDFILE || echo -n "uwsgi not running"
+			   rm -f $PIDFILE
+			   echo "$DAEMON STOPED."
+			else
+			   echo "The $PIDFILE doesn‘t found"
+			fi
+			}
+
+			do_reload() {
+			if [ -p $FIFOFILE ];then
+			   echo w > $FIFOFILE
+			else
+			   $DAEMON --touch-workers-reload $PIDFILE || echo -n "uwsgi can‘t reload"
+			fi
+			}
+
+			do_status() {
+			   ps aux|grep $DAEMON
+			}
+
+			case "$1" in
+			status)
+			   echo -en "Status $NAME: \n"
+			   do_status
+			;;
+			start)
+			   echo -en "Starting $NAME: \n"
+			   do_start
+			;;
+			stop)
+			   echo -en "Stopping $NAME: \n"
+			   do_stop
+			;;
+			reload|graceful)
+			   echo -en "Reloading $NAME: \n"
+			   do_reload
+			;;
+			*)
+			   echo "Usage: $SCRIPTNAME {start|stop|reload}" >&2
+			   exit 3
+			;;
+			esac
+			exit 0
+		[root@liuwei ~]# chmod 755 /etc/init.d/uwsgi
+4 部署
+		1.	项目树
+				/usr/local/nginx/html
+					CMproject
+						cmpro
+						CMproject
+							asgi.py
+							__init__.py
+							__pycache__
+							settings.py
+							urls.py
+							wsgi.py
+						db.sqlite3
+						manage.py
+						static
+						templates
+						venv
+				/usr/local/cmpro_static/
+					admin
+					bootstrap
+						css
+						fonts
+						js
+					css
+						cmpro-css.css
+					js
+						cmpro-js.js
+						jquery-3.3.1.min.js
+					img
+					    timg.PNG
+		2.
+		    创建一个/usr/datadump路径
+		    创建一个/usr/local/cmpro_static路径
+            settings中的STATIC_ROOT取消注释
+            settings中的ALLOWED_HOSTS添加元素'*'
+		    项目路径下执行【python3 manage.py collectstatic】
+		3. 	要在nginx.conf里面生成两个location，
+			location / {
+                include uwsgi_params;
+                uwsgi_pass 127.0.0.1:9090;
+                uwsgi_param UWSGI_SCRIPT CMproject.wsgi;
+                uwsgi_param UWSGI_CHDIR /usr/local/nginx/html/CMproject;
+                index index.html index.htm;
+                client_max_body_size 35m;
+                uwsgi_cache_valid 1m;
+                uwsgi_temp_file_write_size 64k;
+                uwsgi_busy_buffers_size 64k;
+                uwsgi_buffers 8 64k;
+                uwsgi_read_timeout 300;
+                uwsgi_send_timeout 300;
+                uwsgi_connect_timeout 300;
+        	}
+			location /static {
+                alias /usr/local/cmpro_static/;
+        	}
+        4.  在写【/etc/uwsgi/uwsgi.ini】文件时，里面的参数【pythonpath】，/usr/local/nginx/html/CMproject/venv/Lib/site-packages/
+5 执行
+	[root@liuwei ~]# nginx                       # 启动nginx
+	[root@liuwei ~]# /etc/init.d/mysql start     # 启动mysql
+	【netstat -ntpl】  查看当前端口占用情况
+	【killall -s HUP nginx】   修改nginx.conf后，用于平滑的重启
+	【tailf /var/log/uwsgi9090.log】  用于查看日志
+	【/etc/init.d/uwsgi status】   查看uwsgi
+	【/etc/init.d/uwsgi start】    启动uwsgi
+	【/etc/init.d/uwsgi stop】 	关闭uwsgi
+6 pip下载源
+	pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple 模块
+	pip3 install -i http://pypi.douban.com/simple/ 模块

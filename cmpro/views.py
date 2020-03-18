@@ -2,14 +2,39 @@ from django.shortcuts import render
 from django.shortcuts import redirect
 from django.shortcuts import HttpResponse
 from django.utils.encoding import escape_uri_path
+from django.contrib import auth
 from cmpro.models import Commodity
 from django.db import transaction
 from django.urls import reverse
 from cmpro.forms.model_form import *
+from cmpro.utils.dump_data import AutoDumpMysqlData
 import json
 import xlrd
 
 # Create your views here.
+
+
+def logout(request):
+    """注销用户状态"""
+    auth.logout(request)
+    return redirect(reverse("login"))
+
+
+def login(request):
+    """登录页面"""
+    if request.method == "GET":
+        return render(request, "login.html")
+    # 使用django原生的auth模块来做用户校验与登录
+    current_user = auth.authenticate(
+        username=request.POST.get("user"),
+        password=request.POST.get("pwd")
+    )
+    if current_user:
+        auth.login(request, current_user)
+        AutoDumpMysqlData().check_file()            # 每次登陆前，进行一次数据库备份校验，如果符合条件就进行数据库备份
+        return redirect(reverse("index"))
+    else:
+        return render(request, "login.html", {"state": "用户名或密码错误"})
 
 
 def page_show(request):
